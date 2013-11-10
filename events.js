@@ -29,3 +29,18 @@ var eventManager = (function(){
 		, trigger: trigger
 	};
 })();
+
+Array.prototype.contains = function(object){
+
+	var iter;
+
+	for(iter = 0; iter < this.length; iter++){
+		if(equals(object, this[iter])){
+			return true;
+		}
+	}
+
+	function equals(objA, objB){
+
+	};
+};

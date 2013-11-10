@@ -107,10 +107,68 @@ function getPossibleKeys(input){
 function getIntersectOfKeys(keysets){
 	var finalKeySet
 	, keyset
+	, key1
+	, key2
+	, mergedKey
+	, mergedKeys
+	, i, j, k;
+
+	if(typeof keysets !== 'array' || keysets.length < 1){
+		return undefined;
+	}
+
+	finalKeySet = keysets[0];
+
+	for(i = 1; i < keysets.length; i++){
+		keyset = keysets[i];
+		mergedKeys = [];
+		for(j = 0; j < finalKeySet.length; j++){
+			for(k = 0; k < keyset.length; k++){
+				mergedKey = mergeKeys(finalKeySet[j], keyset[k]);
+				if(typeof mergedKey !== 'undefined'){
+					mergedKeys.push(mergedKey);
+				}
+			}
+		}
+		for(j = 0; j < mergedKeys.length; j++){
+			finalKeySet.push(mergedKeys[j]);
+		}
+		for(j = 0; j < keyset.length; j++){
+			finalKeySet.push(keyset[j]);
+		}
+		finalKeySet = removeDuplicates.apply(finalKeySet);
+	};
+
+	finalKeySet = finalKeySet.sort(function(a,b){
+
+	});
+
+	return finalKeySet;
+};
+
+function removeDuplicates(){
+	var result = []
 	, i;
 
-	for(i = 0; i < keysets.length; i++){
-		keyset = keysets[i];
-		
-	};
+};
+
+function mergeKeys(key1, key2){
+	var prop
+	, result = {};
+
+	for(prop in key1){
+		if(key1.hasOwnProperty(prop)){
+			if(key2.hasOwnProperty(prop) && key1[prop] !== key2[prop]){
+				return undefined;
+			}
+			result[prop] = key1[prop];
+		}
+	}
+
+	for(prop in key2){
+		if(key2.hasOwnProperty(prop)){
+			result[prop] = key2[prop];
+		}
+	}
+	return result;
 };
