@@ -4,12 +4,13 @@ var lengthIndex
 
 $(function(){
 
-	eventManager.on('loadedDict', loadedDict);
+	eventManager.on({eventName: 'loadedDict', listener: loadedDict});
 
 	loadDict();
 });
 
-function loadedDict(dict){
+function loadedDict(argObject){
+	var dict = argObject.dict;
 	dictionary = dict;
 	lengthIndex = makeLengthIndex(dict);
 	patternIndex = makePatternIndex(dict);
@@ -19,7 +20,7 @@ function loadDict(){
 	$.ajax('/dict.txt', {
 		success: function(data){
 			var dict = data.split(/\s/i);
-			eventManager.trigger('loadedDict', window, dict);
+			eventManager.trigger({eventName: 'loadedDict', scope: window, argObject: {dict:dict}});
 		}
 	});
 };
@@ -152,23 +153,52 @@ function removeDuplicates(){
 
 };
 
-function mergeKeys(key1, key2){
-	var prop
-	, result = {};
-
-	for(prop in key1){
-		if(key1.hasOwnProperty(prop)){
-			if(key2.hasOwnProperty(prop) && key1[prop] !== key2[prop]){
-				return undefined;
+function createKey(){
+	var key = {}
+	, equals = function(other){
+		var prop;
+		for(prop in key){
+			if(key.hasOwnProperty(prop)){
+				if(!other.key.hasOwnProperty(prop)){
+					return false;
+				}
+				else if(key[prop] !== other.key[prop]){
+					return false;
+				}
 			}
-			result[prop] = key1[prop];
 		}
+		for(prop in other.key){
+			if(other.key.hasOwnProperty(prop)){
+				if(!key.hasOwnProperty(prop)){
+					return false;
+				}
+			}
+		}
+		return true;
 	}
+	, merge = function(other){
+		var prop
+		, result = createKey();
 
-	for(prop in key2){
-		if(key2.hasOwnProperty(prop)){
-			result[prop] = key2[prop];
+		for(prop in key){
+			if(key.hasOwnProperty(prop)){
+				if(other.key.hasOwnProperty(prop) && key[prop] !== other.key[prop]){
+					return undefined;
+				}
+				result.key[prop] = key[prop];
+			}
 		}
-	}
-	return result;
+
+		for(prop in other.key){
+			if(other.key.hasOwnProperty(prop)){
+				result.key[prop] = other.key[prop];
+			}
+		}
+		return result;
+	};
+	return {
+		key: key
+		, equals: equals
+		, merge: merge
+	};
 };

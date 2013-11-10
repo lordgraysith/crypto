@@ -1,24 +1,25 @@
 var eventManager = (function(){
 	var listeners = {};
-	function on(eventName, listener){
+	function on(eventObj){
+		var listener = eventObj.listener
+		, eventName = eventObj.eventName;
+
 		if(typeof listeners[eventName] === 'undefined'){
 			listeners[eventName] = [];
 		}
+
 		listeners[eventName].push(listener);
 	};
-	function trigger(eventName, scope){
-		if(typeof listeners[eventName] !== 'undefined'){
-			var scope = scope || window
-			, args
-			, iter1
-			, iter2;
 
-			for(iter1 = 0; iter1 < listeners[eventName].length; iter1++){
-				args = [];
-				for(iter2 = 2; iter2 < arguments.length; iter2++){
-					args.push(arguments[iter2]);
-				}				
-				listeners[eventName][iter1].apply(scope, args);
+	function trigger(eventObj){
+		var scope = eventObj.scope || window
+		, eventName = eventObj.eventName
+		, argObject = eventObj.argObject
+		, iter;
+
+		if(typeof listeners[eventName] !== 'undefined'){
+			for(iter = 0; iter < listeners[eventName].length; iter++){			
+				listeners[eventName][iter].apply(scope, [argObject]);
 			}
 		}
 		
@@ -31,7 +32,6 @@ var eventManager = (function(){
 })();
 
 Array.prototype.contains = function(object){
-
 	var iter;
 
 	for(iter = 0; iter < this.length; iter++){
@@ -40,7 +40,14 @@ Array.prototype.contains = function(object){
 		}
 	}
 
-	function equals(objA, objB){
+	return false;
 
+	function equals(objA, objB){
+		if(typeof objA.equals === 'function'){
+			return objA.equals(objB);
+		}
+		else{
+			return objA === objB;
+		}
 	};
 };
