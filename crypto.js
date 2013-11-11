@@ -95,7 +95,7 @@ function getPossibleKeys(input){
 	, i, j;
 
 	for (i = 0; i < words.length; i++) {
-		key = {};
+		key = createKey;
 		for(j = 0; j < input.length; j++){
 			key[input[j]] = words[i][j];
 		}
@@ -137,7 +137,6 @@ function getIntersectOfKeys(keysets){
 		for(j = 0; j < keyset.length; j++){
 			finalKeySet.push(keyset[j]);
 		}
-		finalKeySet = removeDuplicates.apply(finalKeySet);
 	};
 
 	finalKeySet = finalKeySet.sort(function(a,b){
@@ -145,12 +144,6 @@ function getIntersectOfKeys(keysets){
 	});
 
 	return finalKeySet;
-};
-
-function removeDuplicates(){
-	var result = []
-	, i;
-
 };
 
 function createKey(){
@@ -197,8 +190,29 @@ function createKey(){
 		return result;
 	};
 	return {
-		key: key
-		, equals: equals
+		equals: equals
 		, merge: merge
+		, getValue: function(keyName){
+			return key[keyName];
+		}
+		, hasKey: function(keyName){
+			return key.hasOwnProperty(keyName);
+		}
+		, setValue: function(keyName, value){
+			return key[keyName] = value;
+		}
+		, removeKey: function(keyName){
+			delete key[keyName];
+		}
+		, getAllKeys: function(){
+			var result = []
+			, prop;
+			for(prop in key){
+				if(key.hasOwnProperty(prop)){
+					result.push(prop);
+				}
+			}
+			return result;
+		}
 	};
 };
