@@ -11,7 +11,12 @@ $(function(){
 });
 
 function encryptionKeyUp(){
-	var encryptedWords = $('#encryption').val().split(' ')
+	var encryptedText = $('#encryption').val();
+	if(encryptedText[encryptedText.length - 1] !== ' '){
+		return;
+	}
+
+	var encryptedWords = $('#encryption').val().trim().split(' ')
 	, iter
 	, keysets = [];
 
@@ -19,8 +24,20 @@ function encryptionKeyUp(){
 		keysets.push(getPossibleKeys(encryptedWords[iter]));
 	}
 
-	console.log(getIntersectOfKeys(keysets));
+	$('#decryption').text(decode(encryptedText, getIntersectOfKeys(keysets)[0]));
 };
+
+function decode(text, key){
+	var iter
+	, decryptedText = ''
+	, regex
+	, keys;
+
+	for(iter = 0; iter < text.length; iter++){
+		decryptedText = decryptedText + key.getValue(text[iter]);
+	}
+	return decryptedText;
+}
 
 function loadedDict(argObject){
 	var dict = argObject.dict;
@@ -221,6 +238,7 @@ function createKey(){
 		}
 		return result;
 	};
+	key[' '] = ' ';
 	return {
 		equals: equals
 		, merge: merge
