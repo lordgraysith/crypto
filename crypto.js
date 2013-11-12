@@ -5,9 +5,22 @@ var lengthIndex
 $(function(){
 
 	eventManager.on({eventName: 'loadedDict', listener: loadedDict});
+	$('#encryption').on('keyup', encryptionKeyUp);
 
 	loadDict();
 });
+
+function encryptionKeyUp(){
+	var encryptedWords = $('#encryption').val().split(' ')
+	, iter
+	, keysets = [];
+
+	for(iter = 0; iter < encryptedWords.length; iter++){
+		keysets.push(getPossibleKeys(encryptedWords[iter]));
+	}
+
+	console.log(getIntersectOfKeys(keysets));
+};
 
 function loadedDict(argObject){
 	var dict = argObject.dict;
@@ -95,9 +108,9 @@ function getPossibleKeys(input){
 	, i, j;
 
 	for (i = 0; i < words.length; i++) {
-		key = createKey;
+		key = createKey();
 		for(j = 0; j < input.length; j++){
-			key[input[j]] = words[i][j];
+			key.setValue(input[j], words[i][j]);
 		}
 		keys.push(key);
 	};
@@ -108,13 +121,12 @@ function getPossibleKeys(input){
 function getIntersectOfKeys(keysets){
 	var finalKeySet
 	, keyset
-	, key1
-	, key2
+	, key
 	, mergedKey
 	, mergedKeys
 	, i, j, k;
 
-	if(typeof keysets !== 'array' || keysets.length < 1){
+	if(typeof keysets.length === 'undefined' || keysets.length < 1){
 		return undefined;
 	}
 
@@ -125,22 +137,39 @@ function getIntersectOfKeys(keysets){
 		mergedKeys = [];
 		for(j = 0; j < finalKeySet.length; j++){
 			for(k = 0; k < keyset.length; k++){
-				mergedKey = mergeKeys(finalKeySet[j], keyset[k]);
+				mergedKey = finalKeySet[j].merge(keyset[k]);
 				if(typeof mergedKey !== 'undefined'){
 					mergedKeys.push(mergedKey);
 				}
 			}
 		}
 		for(j = 0; j < mergedKeys.length; j++){
-			finalKeySet.push(mergedKeys[j]);
+			key = mergedKeys[j];
+			if(!finalKeySet.contains(key)){
+				finalKeySet.push(key);
+			}
 		}
 		for(j = 0; j < keyset.length; j++){
-			finalKeySet.push(keyset[j]);
+			key = keyset[j];
+			if(!finalKeySet.contains(key)){
+				finalKeySet.push(key);
+			}
 		}
 	};
 
 	finalKeySet = finalKeySet.sort(function(a,b){
+		var aLength = a.getLength()
+		, bLength = b.getLength();
 
+		if(aLength < bLength){
+			return -1;
+		}
+		else if (aLength > bLength){
+			return 1;
+		}
+		else{
+			return 0;
+		}
 	});
 
 	return finalKeySet;
@@ -150,42 +179,45 @@ function createKey(){
 	var key = {}
 	, equals = function(other){
 		var prop;
-		for(prop in key){
-			if(key.hasOwnProperty(prop)){
-				if(!other.key.hasOwnProperty(prop)){
-					return false;
-				}
-				else if(key[prop] !== other.key[prop]){
-					return false;
-				}
+		keyNames = this.getAllKeys();
+		for(iter = 0; iter < keyNames.length; iter++){
+			prop = keyNames[iter];
+			if(!other.hasKey(prop)){
+				return false;
+			}
+			else if(this.getValue(prop) !== other.getValue(prop) ){
+				return false;
 			}
 		}
-		for(prop in other.key){
-			if(other.key.hasOwnProperty(prop)){
-				if(!key.hasOwnProperty(prop)){
-					return false;
-				}
+
+		keyNames = other.getAllKeys();
+		for(iter = 0; iter < keyNames.length; iter++){
+			prop = keyNames[iter];
+			if(!this.hasKey(prop)){
+				return false;
 			}
 		}
 		return true;
 	}
 	, merge = function(other){
 		var prop
-		, result = createKey();
+		, result = createKey()
+		, keyNames
+		, iter;
 
-		for(prop in key){
-			if(key.hasOwnProperty(prop)){
-				if(other.key.hasOwnProperty(prop) && key[prop] !== other.key[prop]){
-					return undefined;
-				}
-				result.key[prop] = key[prop];
+		keyNames = this.getAllKeys();
+		for(iter = 0; iter < keyNames.length; iter++){
+			prop = keyNames[iter];
+			if(other.hasKey(prop) && this.getValue(prop) !== other.getValue(prop)){
+				return undefined;
 			}
+			result.setValue(prop, this.getValue(prop));
 		}
 
-		for(prop in other.key){
-			if(other.key.hasOwnProperty(prop)){
-				result.key[prop] = other.key[prop];
-			}
+		keyNames = other.getAllKeys();
+		for(iter = 0; iter < keyNames.length; iter++){
+			prop = keyNames[iter];
+			result.setValue(prop, other.getValue(prop));
 		}
 		return result;
 	};
@@ -213,6 +245,9 @@ function createKey(){
 				}
 			}
 			return result;
+		}
+		, getLength: function(){
+			return this.getAllKeys().length;
 		}
 	};
 };
